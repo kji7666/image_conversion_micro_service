@@ -1,7 +1,7 @@
 <!--版面配置-->
 <template>
   <div class="app">
-    <NavigationBar />
+    <Header />
     <TextSection />
     <UploadSection />
   </div>
@@ -9,9 +9,10 @@
 
 <script setup>
 import HeaderMenu from './components/HeaderMenu.vue'
+import Header from './components/Header.vue'
 import TextSection from './components/TextSection.vue'
 import UploadSection from './components/UploadSection.vue'
-import NavigationBar from './components/NavigationBar.vue'
+import NavigationBar from './components/HeaderNav.vue'
 </script>
 
 
