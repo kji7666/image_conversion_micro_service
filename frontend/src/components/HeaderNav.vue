@@ -70,6 +70,7 @@ li {
   color: $color-grey;
   border-bottom: none;
   cursor: pointer;
+  transition: all 0.2s ease; // 👉 增加滑鼠移動時的動畫過渡效果
 }
 
 li.active {
@@ -78,5 +79,11 @@ li.active {
   border-bottom: 5px solid $color-black;
 }
 
+li:hover {
+    color: $color-blue-dark;
+    border-bottom: 5px solid $color-blue-dark; // 👉 滑鼠移上時加底線
+    font-weight: 500;
+    transform: translateY(-2px); // 👉 可選：有種「浮起來」的感覺
+}
 
 </style>

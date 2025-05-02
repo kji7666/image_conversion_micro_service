@@ -2,17 +2,13 @@
 <template>
   <div class="app">
     <Header />
-    <TextSection />
-    <UploadSection />
+    <HomeView />
   </div>
 </template>
 
 <script setup>
-import HeaderMenu from './components/HeaderMenu.vue'
+import HomeView from './views/HomeView.vue'
 import Header from './components/Header.vue'
-import TextSection from './components/TextSection.vue'
-import UploadSection from './components/UploadSection.vue'
-import NavigationBar from './components/HeaderNav.vue'
 </script>
 
 

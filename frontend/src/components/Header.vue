@@ -1,7 +1,9 @@
 <template>
     <header class="app-header">
       <!-- 可以在這裡放 Logo 或其他元素 -->
-      <div class="logo">我的網站 LOGO</div>
+      <div class="logo">
+        <img src="../assets/image/gaki.jpg" alt="網站 Logo" class="logo-img" />
+      </div>
   
       <!-- 使用 HeaderNav 子元件 -->
       <HeaderNav
@@ -11,15 +13,14 @@
       />
   
       <!-- 可以在這裡放用戶資訊或其他元素 -->
-      <div class="user-actions">
-        <!-- 根據登入狀態顯示不同內容 -->
+      <!-- <div class="user-actions">
         <span>用戶操作區</span>
-      </div>
+      </div> -->
   
       <!-- (僅為演示) 顯示當前活動項目的名稱 -->
-      <div style="clear: both; padding-top: 10px; color: #666;">
+      <!-- <div style="clear: both; padding-top: 10px; color: #666;">
         當前活動項目: {{ currentActiveNav }}
-      </div>
+      </div> -->
     </header>
   </template>
   
@@ -95,10 +96,11 @@
     flex-grow: 1; /* 允許導航區域伸展 */
   }
   
-  .user-actions {
-    margin-left: auto; /* 將用戶操作區推到最右邊 */
+  /* .user-actions {
+    margin-left: auto;
     color: #555;
-  }
+  } 
+  */
   
   /* 清除浮動和演示文字的樣式 (如果不需要演示可以移除) */
   div[style*="clear: both"] {
@@ -107,4 +109,13 @@
       margin-top: 10px;
       border-radius: 4px;
   }
+
+  .logo-img {
+    height: 100px;         /* 設定固定高度 */
+    width: auto;          /* 寬度自動計算，保持比例 */
+    object-fit: contain;  /* 確保圖片不被裁切或拉扯變形 */
+  }
+
+
+
   </style>
