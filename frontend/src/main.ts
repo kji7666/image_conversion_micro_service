@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router' // 確保引入了你的路由配置
+import './assets/animation.css'
+
 
 // --- 引入 GSAP 和 Lenis ---
 import { gsap } from 'gsap';
@@ -46,3 +48,6 @@ gsap.ticker.lagSmoothing(0);
 
 console.log('Lenis 平滑滾動已啟用並與 GSAP ScrollTrigger 整合');
 // --- Lenis 初始化與整合結束 ---
+
+
+

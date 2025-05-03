@@ -3,12 +3,39 @@
   <div class="app">
     <Header />
     <HomeView />
+    <!-- <FloatImage />
+    <ParallaxContainer /> -->
   </div>
 </template>
 
 <script setup>
-import HomeView from './views/HomeView.vue'
-import Header from './components/Header.vue'
+import HomeView from './views/HomeView.vue';
+import Header from './components/Header.vue';
+import ParallaxContainer from './components/ParallaxContainer.vue';
+
+// 在 main.js 或 App.vue 的 <script setup> 中
+import { onMounted, onUnmounted, nextTick } from 'vue';
+import router from './router'; // 引入你的 router
+import { initScrollObserver, observeElements, disconnectObserver } from './utils/intersectionObserver';
+
+onMounted(() => {
+  initScrollObserver();
+  // 初始頁面加載後觀察一次
+  nextTick(() => { // 確保 DOM 渲染完成
+     observeElements();
+  });
+
+  // 監聽路由變化，在新頁面加載後重新觀察
+  router.afterEach((to, from) => {
+      nextTick(() => { // 確保新頁面 DOM 渲染完成
+          observeElements();
+      });
+  });
+});
+
+onUnmounted(() => {
+  disconnectObserver();
+});
 </script>
 
 
