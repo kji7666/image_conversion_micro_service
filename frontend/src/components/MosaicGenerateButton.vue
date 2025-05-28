@@ -5,7 +5,7 @@
     :disabled="!canGenerateInternal || busy"
     class="generate-button"
   >
-    <slot> <!-- 允許父組件自定義按鈕文本 -->
+    <slot>
       {{ busy ? '生成中...' : '開始生成馬賽克' }}
     </slot>
   </button>
@@ -17,14 +17,15 @@ import axios from 'axios';
 
 interface BackendSuccessResponse {
   success: boolean;
-  imageUrl: string;
+  imageUrl: string; // 假設成功時還是返回 imageUrl
   message?: string;
 }
 
 interface BackendErrorResponse {
   message: string;
-  // 你可以根據後端實際返回的錯誤結構添加更多字段
 }
+
+
 
 const props = defineProps({
   styleImage: {
@@ -35,11 +36,22 @@ const props = defineProps({
     type: Array as PropType<File[]>,
     required: true,
   },
+  /**
+   * The base URL for the image processing API.
+   * Example: 'http://localhost:8080/api/home/images/process'
+   */
   apiUrl: {
     type: String,
-    default: 'http://localhost:8080/api/generate-mosaic',
+    required: true, // 讓父組件必須傳遞這個
   },
-  // disabled prop 可以從外部控制按鈕的禁用狀態，除了內部邏輯外
+  /**
+   * The operation to perform. This will be sent as a query parameter.
+   * Example: 'generateMosaic', 'compress', 'decompress'
+   */
+  operation: {
+    type: String,
+    required: true, // 讓父組件必須傳遞操作類型
+  },
   disabled: {
     type: Boolean,
     default: false,
@@ -50,7 +62,7 @@ const emit = defineEmits<{
   (e: 'success', payload: { imageUrl: string; message?: string }): void;
   (e: 'error', message: string): void;
   (e: 'progress', percentage: number): void;
-  (e: 'busy-change', isBusy: boolean): void; // 新增：通知父組件忙碌狀態變化
+  (e: 'busy-change', isBusy: boolean): void;
 }>();
 
 const busy = ref(false);
@@ -63,82 +75,90 @@ async function handleGenerate() {
   if (!canGenerateInternal.value || busy.value) return;
 
   busy.value = true;
-  emit('busy-change', true); // 通知父組件開始忙碌
+  emit('busy-change', true);
   emit('progress', 0);
 
   const formData = new FormData();
   if (props.styleImage) {
-    formData.append('styleImage', props.styleImage, props.styleImage.name);
+    formData.append('styleImage', props.styleImage, props.styleImage.name); // 後端可能期望的字段名
   }
-  props.sourceImages.forEach((file) => {
+  // 假設後端期望素材圖片的字段名也是 'sourceImages' 或類似
+  // 如果後端像 ImageUploadButton 那樣只期望一個 'image' 字段，這裡需要調整
+  props.sourceImages.forEach((file, index) => {
+    // 你可能需要根據後端期望的格式來命名這些文件
+    // 例如，如果後端可以處理多個名為 'sourceImages' 的文件：
     formData.append('sourceImages', file, file.name);
+    // 或者如果需要不同的鍵名：
+    // formData.append(`sourceImage[${index}]`, file, file.name);
   });
 
-  let currentProgress = 0; // 用於 onUploadProgress
+  let currentProgress = 0;
 
   try {
-    console.log(`[MosaicGenerateButton] Sending to ${props.apiUrl}`);
-    const response = await axios.post<BackendSuccessResponse>(props.apiUrl, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      responseType: 'json', // 期望後端返回 JSON
-      onUploadProgress: progressEvent => {
-        if (progressEvent.total) {
-          // 將上傳進度映射到 0-90%，因為後端處理也需要時間
-          const percentCompleted = Math.round((progressEvent.loaded * 90) / progressEvent.total);
-          if (percentCompleted > currentProgress) {
-            currentProgress = percentCompleted;
-            emit('progress', currentProgress);
+    console.log(`[MosaicGenerateButton] Sending to ${props.apiUrl} with op=${props.operation}`);
+    const response = await axios.post<BackendSuccessResponse>(
+      props.apiUrl, // 基礎 URL
+      formData,
+      {
+        params: { // 這裡添加查詢參數
+          op: props.operation
+        },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        responseType: 'json',
+        onUploadProgress: progressEvent => {
+          if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 90) / progressEvent.total);
+            if (percentCompleted > currentProgress) {
+              currentProgress = percentCompleted;
+              emit('progress', currentProgress);
+            }
           }
         }
       }
-    });
+    );
 
     const result = response.data;
     if (result.success && result.imageUrl) {
-      emit('progress', 100); // 後端處理完成
+      emit('progress', 100);
       emit('success', { imageUrl: result.imageUrl, message: result.message });
     } else {
-      // 即使 HTTP 狀態是 200，但業務邏輯可能失敗
       throw new Error(result.message || '後端操作未成功但未返回明確錯誤信息。');
     }
 
   } catch (err: any) {
+    // ... (錯誤處理邏輯保持不變) ...
     console.error('[MosaicGenerateButton] Error:', err);
     let errorMessage = '生成馬賽克時發生未知錯誤。';
     if (axios.isAxiosError(err)) {
       if (err.response) {
-        // 服務器響應了錯誤狀態碼
         const errorData = err.response.data as BackendErrorResponse | { message?: string };
         errorMessage = errorData?.message || `伺服器錯誤: ${err.response.status} ${err.response.statusText}`;
       } else if (err.request) {
-        // 請求已發出，但沒有收到響應
         errorMessage = '伺服器無響應，請檢查網絡或伺服器狀態。';
       } else {
-        // 設置請求時發生錯誤
         errorMessage = `請求設置錯誤: ${err.message}`;
       }
     } else if (err instanceof Error) {
         errorMessage = err.message;
     }
-
     emit('error', errorMessage);
-    emit('progress', 0); // 出錯時重置進度
+    emit('progress', 0);
   } finally {
     busy.value = false;
-    emit('busy-change', false); // 通知父組件結束忙碌
+    emit('busy-change', false);
   }
 }
 </script>
 
 <style scoped lang="scss">
-/* 從 UseNowView.vue 複製 .generate-button 的樣式 */
+/* 樣式保持不變 */
 .generate-button {
   display: block;
   width: auto;
   min-width: 220px;
-  margin: 2.5rem auto; /* 與 UseNowView 中的 generate-button 保持一致 */
+  margin: 2.5rem auto;
   background-color: #2ecc71;
   font-size: 1.2rem;
   padding: 16px 35px;

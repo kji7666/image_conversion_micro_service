@@ -19,7 +19,8 @@
     <MosaicGenerateButton
       :style-image="styleImageFile"
       :source-images="folderImageFiles"
-      :api-url="http://localhost:8080"
+      :api-url="backendConfig.baseUrl"
+      :operation="backendConfig.mosaicOperation"
       :disabled="!canGenerate || isGenerating"
       @success="handleGenerationSuccess"
       @error="handleGenerationError"
@@ -69,7 +70,10 @@ const generationProgress = ref(0);
 const finalImageUrl = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
-const backendApiUrl = 'http://localhost:8080/api/generate-mosaic'; // 確保這是你的後端 API
+const backendConfig = {
+  baseUrl: 'http://localhost:8080/api/home/images/process',
+  mosaicOperation: 'generateMosaic'
+};
 
 // 計算屬性，用於判斷是否滿足生成條件
 const canGenerate = computed(() => {
